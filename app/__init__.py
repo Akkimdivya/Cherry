@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 
 from app.config import Config
+from app.extensions import ensure_database_exists
 from app.helpers.response_helper import success_response
 from app.middleware.error_handler import register_error_handlers
 from app.repositories.user_repository import init_db
@@ -22,6 +23,7 @@ def create_app(config_overrides=None):
 
     if app.config.get("AUTO_INIT_DB", True):
         with app.app_context():
+            ensure_database_exists(app.config["DATABASE_URL"])
             init_db()
 
     @app.get("/health")

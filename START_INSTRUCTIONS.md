@@ -29,19 +29,15 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 Install PostgreSQL on your computer.
 
-Create a database named:
+Make sure PostgreSQL is running.
+
+You do not need to manually create the database.
+
+The app will create this database automatically:
 
 ```text
 flask_pg_crud
 ```
-
-If `psql` works in your terminal, run:
-
-```powershell
-psql -U postgres -c "CREATE DATABASE flask_pg_crud;"
-```
-
-If `psql` does not work, create the database from pgAdmin.
 
 ## 4. Check .env
 
@@ -60,6 +56,7 @@ postgresql://USERNAME:PASSWORD@HOST:PORT/DATABASE_NAME
 ```
 
 The app creates the `users` table automatically when it starts.
+It also creates the database automatically if it does not exist.
 
 ## 5. Start API
 
@@ -165,4 +162,3 @@ GET    /api/v1/users/<user_id>
 PUT    /api/v1/users/<user_id>
 DELETE /api/v1/users/<user_id>
 ```
-
