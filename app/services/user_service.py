@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from flask import current_app
 
-from app.helpers.mongo_helper import is_valid_object_id
+from app.helpers.sql_helper import parse_user_id
 from app.repositories import user_repository
 from app.schemas.user_schema import (
     clean_user_payload,
@@ -67,11 +67,10 @@ def get_all_users(query_args):
         return None, "Validation failed", 400, errors, None
 
     search = (query_args.get("search") or "").strip()
-    filters = user_repository.build_user_filters(search)
     skip = (page - 1) * limit
 
-    users = user_repository.get_all_users(filters, skip=skip, limit=limit)
-    total = user_repository.count_users(filters)
+    users = user_repository.get_all_users(search, skip=skip, limit=limit)
+    total = user_repository.count_users(search)
     meta = {
         "page": page,
         "limit": limit,
@@ -83,7 +82,8 @@ def get_all_users(query_args):
 
 
 def get_user_by_id(user_id):
-    if not is_valid_object_id(user_id):
+    user_id = parse_user_id(user_id)
+    if user_id is None:
         return None, "Invalid user id", 400, None, None
 
     user = user_repository.get_user_by_id(user_id)
@@ -94,7 +94,8 @@ def get_user_by_id(user_id):
 
 
 def update_user(user_id, data):
-    if not is_valid_object_id(user_id):
+    user_id = parse_user_id(user_id)
+    if user_id is None:
         return None, "Invalid user id", 400, None, None
 
     errors = validate_update_user(data)
@@ -117,7 +118,8 @@ def update_user(user_id, data):
 
 
 def delete_user(user_id):
-    if not is_valid_object_id(user_id):
+    user_id = parse_user_id(user_id)
+    if user_id is None:
         return None, "Invalid user id", 400, None, None
 
     existing_user = user_repository.get_user_by_id(user_id)
@@ -126,4 +128,3 @@ def delete_user(user_id):
 
     user_repository.delete_user(user_id)
     return None, "User deleted successfully", 200, None, None
-

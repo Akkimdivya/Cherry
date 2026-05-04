@@ -1,5 +1,7 @@
 # Simple Start Guide
 
+This project uses Flask + PostgreSQL.
+
 Use these commands in Windows PowerShell.
 
 ## 1. Go To Project
@@ -8,7 +10,7 @@ Use these commands in Windows PowerShell.
 cd "c:\Users\SAINA\OneDrive\Documents\Div\rest api python"
 ```
 
-## 2. Install
+## 2. Install Python Packages
 
 ```powershell
 python -m venv .venv
@@ -23,21 +25,43 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\.venv\Scripts\Activate.ps1
 ```
 
-## 3. Start MongoDB
+## 3. Setup PostgreSQL
 
-If you use Docker:
+Install PostgreSQL on your computer.
+
+Create a database named:
+
+```text
+flask_pg_crud
+```
+
+If `psql` works in your terminal, run:
 
 ```powershell
-docker compose up -d
+psql -U postgres -c "CREATE DATABASE flask_pg_crud;"
 ```
 
-Your DB URL is in `.env`:
+If `psql` does not work, create the database from pgAdmin.
+
+## 4. Check .env
+
+Open `.env`.
+
+Update the password if your PostgreSQL password is different:
 
 ```env
-MONGO_URI=mongodb://localhost:27017/flask_mongo_crud
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/flask_pg_crud
 ```
 
-## 4. Start API
+Format:
+
+```text
+postgresql://USERNAME:PASSWORD@HOST:PORT/DATABASE_NAME
+```
+
+The app creates the `users` table automatically when it starts.
+
+## 5. Start API
 
 ```powershell
 python run.py
@@ -51,7 +75,7 @@ API URL:
 http://127.0.0.1:5000
 ```
 
-## 5. Test API
+## 6. Test API
 
 Open a new PowerShell terminal.
 
@@ -62,6 +86,8 @@ curl.exe http://127.0.0.1:5000/health
 ```
 
 ### Create User
+
+Use a new email each time.
 
 ```powershell
 curl.exe --% -X POST http://127.0.0.1:5000/api/v1/users -H "Content-Type: application/json" --data-raw "{\"name\":\"Div\",\"email\":\"div@example.com\",\"age\":25}"
@@ -77,7 +103,7 @@ curl.exe http://127.0.0.1:5000/api/v1/users
 
 ### Get One User
 
-Replace `USER_ID_HERE` with your copied id.
+Replace `USER_ID_HERE`.
 
 ```powershell
 curl.exe http://127.0.0.1:5000/api/v1/users/USER_ID_HERE
@@ -99,7 +125,7 @@ Replace `USER_ID_HERE`.
 curl.exe -X DELETE http://127.0.0.1:5000/api/v1/users/USER_ID_HERE
 ```
 
-## 6. Easy Full Test
+## 7. Easy Full Test
 
 This runs create, get, update, and delete automatically:
 
@@ -107,7 +133,9 @@ This runs create, get, update, and delete automatically:
 .\scripts\test_api.ps1
 ```
 
-## 7. Run Automated Tests
+## 8. Run Automated Tests
+
+These tests do not need PostgreSQL.
 
 ```powershell
 python -m pytest -q
@@ -119,18 +147,12 @@ Expected:
 2 passed
 ```
 
-## 8. Stop
+## 9. Stop API
 
-Stop Flask:
+In the API terminal:
 
 ```powershell
 Ctrl + C
-```
-
-Stop Docker MongoDB:
-
-```powershell
-docker compose down
 ```
 
 ## Endpoint List
@@ -143,3 +165,4 @@ GET    /api/v1/users/<user_id>
 PUT    /api/v1/users/<user_id>
 DELETE /api/v1/users/<user_id>
 ```
+

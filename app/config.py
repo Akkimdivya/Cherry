@@ -5,6 +5,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _bool_env(name, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _int_env(name, default):
     value = os.getenv(name)
     if value is None:
@@ -17,8 +24,11 @@ def _int_env(name, default):
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/flask_mongo_crud")
-    MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "flask_mongo_crud")
+    DATABASE_URL = os.getenv(
+        "DATABASE_URL",
+        "postgresql://postgres:postgres@localhost:5432/flask_pg_crud",
+    )
+    AUTO_INIT_DB = _bool_env("AUTO_INIT_DB", True)
     JSON_SORT_KEYS = False
     USERS_DEFAULT_PAGE_SIZE = _int_env("USERS_DEFAULT_PAGE_SIZE", 20)
     USERS_MAX_PAGE_SIZE = _int_env("USERS_MAX_PAGE_SIZE", 100)

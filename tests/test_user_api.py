@@ -1,9 +1,7 @@
-from types import SimpleNamespace
-
-import mongomock
 import pytest
 
 from app import create_app
+from app.helpers.sql_helper import serialize_row
 from app.repositories import user_repository
 
 
@@ -12,13 +10,72 @@ def client(monkeypatch):
     app = create_app(
         {
             "TESTING": True,
-            "MONGO_URI": "mongodb://localhost:27017/flask_mongo_crud_test",
+            "AUTO_INIT_DB": False,
         }
     )
 
-    fake_mongo = SimpleNamespace(db=mongomock.MongoClient().flask_mongo_crud_test)
-    fake_mongo.db.users.create_index("email", unique=True)
-    monkeypatch.setattr(user_repository, "mongo", fake_mongo)
+    state = {
+        "next_id": 1,
+        "users": {},
+    }
+
+    def clone(row):
+        return serialize_row(row.copy()) if row else None
+
+    def create_user(data):
+        user_id = state["next_id"]
+        state["next_id"] += 1
+
+        row = {
+            "id": user_id,
+            "name": data["name"],
+            "email": data["email"],
+            "age": data.get("age"),
+            "created_at": data["created_at"],
+            "updated_at": data["updated_at"],
+        }
+        state["users"][user_id] = row
+        return clone(row)
+
+    def get_user_by_email(email):
+        for row in state["users"].values():
+            if row["email"] == email:
+                return clone(row)
+        return None
+
+    def get_user_by_id(user_id):
+        return clone(state["users"].get(user_id))
+
+    def get_all_users(search=None, skip=0, limit=20):
+        rows = list(state["users"].values())
+        if search:
+            search = search.lower()
+            rows = [
+                row
+                for row in rows
+                if search in row["name"].lower() or search in row["email"].lower()
+            ]
+
+        rows.sort(key=lambda row: row["id"], reverse=True)
+        return [clone(row) for row in rows[skip : skip + limit]]
+
+    def count_users(search=None):
+        return len(get_all_users(search, skip=0, limit=9999))
+
+    def update_user(user_id, data):
+        state["users"][user_id].update(data)
+        return clone(state["users"][user_id])
+
+    def delete_user(user_id):
+        return 1 if state["users"].pop(user_id, None) else 0
+
+    monkeypatch.setattr(user_repository, "create_user", create_user)
+    monkeypatch.setattr(user_repository, "get_user_by_email", get_user_by_email)
+    monkeypatch.setattr(user_repository, "get_user_by_id", get_user_by_id)
+    monkeypatch.setattr(user_repository, "get_all_users", get_all_users)
+    monkeypatch.setattr(user_repository, "count_users", count_users)
+    monkeypatch.setattr(user_repository, "update_user", update_user)
+    monkeypatch.setattr(user_repository, "delete_user", delete_user)
 
     return app.test_client()
 
